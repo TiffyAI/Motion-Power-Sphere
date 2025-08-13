@@ -16,37 +16,6 @@
     canvas {
         display: block;
     }
-    #loadingScreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.9);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        font-size: 2rem;
-        z-index: 100;
-    }
-    #progressBarContainer {
-        width: 80%;
-        max-width: 400px;
-        height: 20px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
-        margin-top: 20px;
-        overflow: hidden;
-    }
-    #progressBar {
-        height: 100%;
-        width: 0;
-        background: #00ffff;
-        box-shadow: 0 0 10px #00ffff;
-        border-radius: 10px;
-        transition: width 0.3s;
-    }
     #accelerator {
         position: fixed;
         bottom: 30px;
@@ -178,12 +147,6 @@
 </head>
 <body>
 
-<div id="loadingScreen">
-    Loading...
-    <div id="progressBarContainer">
-        <div id="progressBar"></div>
-    </div>
-</div>
 <canvas id="gameCanvas"></canvas>
 <div id="scoreContainer">
     <div id="score">Earnings: 0.00 TIFFY</div>
@@ -262,39 +225,6 @@ crystalImg.src = "Crystal.jpg";
 
 let blueKeyImg = new Image();
 blueKeyImg.src = "blue_key.png";
-
-const assetsToLoad = [goalImg, blackHoleImg, crystalImg, blueKeyImg, bubbleSound, breakSound, impactSound, gameOverSound];
-let assetsLoaded = 0;
-const totalAssets = assetsToLoad.length;
-
-function handleAssetLoad() {
-    assetsLoaded++;
-    const progress = (assetsLoaded / totalAssets) * 100;
-    document.getElementById("progressBar").style.width = `${progress}%`;
-    if (assetsLoaded === totalAssets) {
-        document.getElementById("loadingScreen").style.display = "none";
-    }
-}
-
-function loadAssets() {
-    goalImg.onload = handleAssetLoad;
-    blackHoleImg.onload = handleAssetLoad;
-    crystalImg.onload = handleAssetLoad;
-    blueKeyImg.onload = handleAssetLoad;
-
-    assetsToLoad.filter(a => a instanceof Audio).forEach(audio => {
-        audio.addEventListener('canplaythrough', handleAssetLoad, { once: true });
-        audio.load();
-    });
-
-    assetsToLoad.filter(a => a instanceof Image).forEach(img => {
-        if (img.complete) {
-            handleAssetLoad();
-        }
-    });
-
-    fetchTiffyPrice();
-}
 
 function fetchTiffyPrice() {
     fetch('https://tiffyai.github.io/TIFFY-Market-Value/price.json')
@@ -416,8 +346,10 @@ function drawParticles() {
 }
 
 function splitObstacle(o) {
-    breakSound.currentTime = 0;
-    breakSound.play();
+    if (breakSound.readyState >= 3) {
+      breakSound.currentTime = 0;
+      breakSound.play();
+    }
     for (let i = 0; i < 5; i++) {
         particles.push({
             x: o.x,
@@ -433,7 +365,7 @@ function splitObstacle(o) {
 
 function updateScoreDisplay() {
     document.getElementById("score").innerText = "Earnings: " + scoreTiffy.toFixed(2) + " TIFFY";
-    if (tiffyPriceUSD !== null) {
+    if (typeof tiffyPriceUSD !== 'undefined' && tiffyPriceUSD !== null) {
         const usdValue = scoreTiffy * tiffyPriceUSD;
         document.getElementById("usdValue").innerText = `Value: $${usdValue.toFixed(2)} USD`;
     } else {
@@ -480,9 +412,9 @@ function gameLoop() {
         scoreTiffy += tiffyPerPoint;
         localStorage.setItem('tetrusScore', scoreTiffy.toFixed(2));
         updateScoreDisplay();
-        if (bubbleSound.complete) {
-          bubbleSound.currentTime = 0;
-          bubbleSound.play();
+        if (bubbleSound.readyState >= 3) {
+            bubbleSound.currentTime = 0;
+            bubbleSound.play();
         }
         goal.x = Math.random() * (canvas.width - 60) + 30;
         goal.y = Math.random() * (canvas.height - 60) + 30;
@@ -523,7 +455,7 @@ function gameLoop() {
             const angle = Math.atan2(dy, dx);
             speed.x = -Math.cos(angle) * 5;
             speed.y = -Math.sin(angle) * 5;
-            if (impactSound.complete) {
+            if (impactSound.readyState >= 3) {
                 impactSound.currentTime = 0;
                 impactSound.play();
             }
@@ -545,7 +477,7 @@ function gameLoop() {
         const distToHole = Math.sqrt((ball.x - blackHole.x)**2 + (ball.y - blackHole.y)**2);
         if (distToHole < blackHole.radius + ball.r) {
             gameOver = true;
-            if (gameOverSound.complete) {
+            if (gameOverSound.readyState >= 3) {
                 gameOverSound.play();
             }
             document.getElementById("gameOverScreen").style.display = "flex";
@@ -630,7 +562,7 @@ function drawBlackHole() {
     blackHole.zoomAngle += 0.05;
 }
 
-loadAssets();
+fetchTiffyPrice();
 gameLoop();
 </script>
 
