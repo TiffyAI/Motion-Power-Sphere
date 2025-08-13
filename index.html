@@ -148,6 +148,7 @@ goalImg.src = "TiffyAI-Token.png";
 let bubbleSound = new Audio("Bubble.wav");
 let breakSound = new Audio("break.wav");
 let impactSound = new Audio("impact.mp3");
+let gameOverSound = new Audio("game-over.wav");
 
 let level = 1;
 let blackHole = null;
@@ -267,6 +268,7 @@ function drawBlackHole() {
     if (!blackHole) return;
 
     const imgRadius = blackHole.radius * 0.75;
+    const scaleFactor = 1 + Math.sin(blackHole.zoomAngle) * 0.1;
 
     ctx.save();
     // Draw the white glowing circle
@@ -281,12 +283,19 @@ function drawBlackHole() {
     // Draw the fortex.gif as a round "profile picture" inside
     if (blackHoleImg.complete) {
         ctx.beginPath();
-        ctx.arc(blackHole.x, blackHole.y, imgRadius, 0, Math.PI * 2, true);
+        ctx.arc(blackHole.x, blackHole.y, imgRadius * scaleFactor, 0, Math.PI * 2, true);
         ctx.closePath();
         ctx.clip();
-        ctx.drawImage(blackHoleImg, blackHole.x - imgRadius, blackHole.y - imgRadius, imgRadius * 2, imgRadius * 2);
+        ctx.save();
+        ctx.translate(blackHole.x, blackHole.y);
+        ctx.rotate(blackHole.angle);
+        ctx.drawImage(blackHoleImg, -imgRadius * scaleFactor, -imgRadius * scaleFactor, imgRadius * 2 * scaleFactor, imgRadius * 2 * scaleFactor);
+        ctx.restore();
     }
     ctx.restore();
+
+    blackHole.angle += 0.02; // Spinning effect
+    blackHole.zoomAngle += 0.05; // Zooming effect
 }
 
 function gameLoop() {
@@ -326,7 +335,9 @@ function gameLoop() {
                 y: Math.random() * (canvas.height - 100) + 50,
                 radius: 50,
                 vx: (Math.random() - 0.5) * 2,
-                vy: (Math.random() - 0.5) * 2
+                vy: (Math.random() - 0.5) * 2,
+                angle: 0,
+                zoomAngle: 0
             };
         }
     }
@@ -339,6 +350,7 @@ function gameLoop() {
         } else {
             hit = checkCollisionCircleRect(ball.x, ball.y, ball.r, o.x - o.size / 2, o.y - o.size / 2, o.size, o.size);
         }
+        
         if (hit && boostActive) {
             splitObstacle(o);
             return false;
@@ -369,6 +381,7 @@ function gameLoop() {
         const distToHole = Math.sqrt((ball.x - blackHole.x)**2 + (ball.y - blackHole.y)**2);
         if (distToHole < blackHole.radius + ball.r) {
             gameOver = true;
+            gameOverSound.play();
             document.getElementById("gameOverScreen").style.display = "flex";
         } else {
             ball.x += (blackHole.x - ball.x) * 0.005;
