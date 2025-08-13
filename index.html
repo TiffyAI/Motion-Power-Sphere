@@ -49,14 +49,34 @@
         50% { box-shadow: 0 0 25px rgba(0, 255, 255, 1), inset 0 0 20px rgba(0, 200, 255, 0.7); }
         100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.8), inset 0 0 10px rgba(0, 200, 255, 0.5); }
     }
-    #score {
+    #scoreContainer {
         position: absolute;
         top: 15px;
         left: 20px;
-        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
         color: #fff;
         text-shadow: 0 0 5px #000;
         font-family: Arial, sans-serif;
+    }
+    #score {
+        font-size: 1.2rem;
+    }
+    #withdrawBtn {
+        margin-left: 15px;
+        padding: 5px 10px;
+        font-size: 0.9rem;
+        background: rgba(0, 200, 255, 0.2);
+        border: 1px solid rgba(0, 255, 255, 0.5);
+        border-radius: 5px;
+        color: #fff;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        transition: transform 0.1s ease-in-out;
+    }
+    #withdrawBtn:active {
+        transform: scale(0.95);
     }
     #gameOverScreen {
         position: fixed;
@@ -86,7 +106,10 @@
 <body>
 
 <canvas id="gameCanvas"></canvas>
-<div id="score">Earnings: 0.00 TIFFY</div>
+<div id="scoreContainer">
+    <div id="score">Earnings: 0.00 TIFFY</div>
+    <button id="withdrawBtn">Withdraw</button>
+</div>
 <div id="accelerator">POWER</div>
 
 <div id="gameOverScreen">
@@ -129,6 +152,9 @@ let impactSound = new Audio("impact.mp3");
 let level = 1;
 let blackHole = null;
 let gameOver = false;
+
+let blackHoleImg = new Image();
+blackHoleImg.src = "fortex.gif";
 
 function spawnObstacles(num = 5) {
     const shapes = ['rect', 'circle', 'triangle'];
@@ -222,7 +248,7 @@ function splitObstacle(o) {
 }
 
 function updateScoreDisplay() {
-    document.getElementById("score").innerText = "Score: " + scoreTiffy.toFixed(2) + " TIFFY";
+    document.getElementById("score").innerText = "Earnings: " + scoreTiffy.toFixed(2) + " TIFFY";
 }
 
 function checkCollisionCircleRect(cx, cy, cr, rx, ry, rw, rh) {
@@ -239,6 +265,11 @@ function checkCollisionCircleRect(cx, cy, cr, rx, ry, rw, rh) {
 
 function drawBlackHole() {
     if (!blackHole) return;
+
+    const imgRadius = blackHole.radius * 0.75;
+
+    ctx.save();
+    // Draw the white glowing circle
     ctx.beginPath();
     ctx.arc(blackHole.x, blackHole.y, blackHole.radius, 0, Math.PI * 2);
     ctx.fillStyle = "#000";
@@ -246,6 +277,16 @@ function drawBlackHole() {
     ctx.shadowColor = "rgba(255, 255, 255, 0.7)";
     ctx.fill();
     ctx.shadowBlur = 0;
+
+    // Draw the fortex.gif as a round "profile picture" inside
+    if (blackHoleImg.complete) {
+        ctx.beginPath();
+        ctx.arc(blackHole.x, blackHole.y, imgRadius, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(blackHoleImg, blackHole.x - imgRadius, blackHole.y - imgRadius, imgRadius * 2, imgRadius * 2);
+    }
+    ctx.restore();
 }
 
 function gameLoop() {
@@ -374,6 +415,10 @@ boostBtn.addEventListener("mouseup", () => boostActive = false);
 
 document.getElementById("tryAgainBtn").addEventListener("click", () => {
     location.reload();
+});
+
+document.getElementById("withdrawBtn").addEventListener("click", () => {
+    window.location.href = "https://tiffyai.github.io/Offline-/";
 });
 
 gameLoop();
