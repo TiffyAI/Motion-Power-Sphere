@@ -24,10 +24,28 @@
         height: 100%;
         background: rgba(0, 0, 0, 0.9);
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         font-size: 2rem;
         z-index: 100;
+    }
+    #progressBarContainer {
+        width: 80%;
+        max-width: 400px;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        margin-top: 20px;
+        overflow: hidden;
+    }
+    #progressBar {
+        height: 100%;
+        width: 0;
+        background: #00ffff;
+        box-shadow: 0 0 10px #00ffff;
+        border-radius: 10px;
+        transition: width 0.3s;
     }
     #accelerator {
         position: fixed;
@@ -160,7 +178,12 @@
 </head>
 <body>
 
-<div id="loadingScreen">Loading...</div>
+<div id="loadingScreen">
+    Loading...
+    <div id="progressBarContainer">
+        <div id="progressBar"></div>
+    </div>
+</div>
 <canvas id="gameCanvas"></canvas>
 <div id="scoreContainer">
     <div id="score">Earnings: 0.00 TIFFY</div>
@@ -203,10 +226,9 @@ let scoreTiffy = parseFloat(localStorage.getItem('tetrusScore') || '0');
 let hasBlueKey = false;
 let keyFoundTimestamp = localStorage.getItem('tiltGameBlueKeyTimestamp');
 
-// Check for key and expiration using the unique key name
 if (keyFoundTimestamp) {
     const currentTime = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000; // milliseconds in a day
+    const oneDay = 24 * 60 * 60 * 1000;
     if (currentTime - keyFoundTimestamp < oneDay) {
         hasBlueKey = true;
     } else {
@@ -241,15 +263,16 @@ crystalImg.src = "Crystal.jpg";
 let blueKeyImg = new Image();
 blueKeyImg.src = "blue_key.png";
 
-let assetsToLoad = [goalImg, blackHoleImg, crystalImg, blueKeyImg, bubbleSound, breakSound, impactSound, gameOverSound];
+const assetsToLoad = [goalImg, blackHoleImg, crystalImg, blueKeyImg, bubbleSound, breakSound, impactSound, gameOverSound];
 let assetsLoaded = 0;
-let totalAssets = assetsToLoad.length;
+const totalAssets = assetsToLoad.length;
 
 function handleAssetLoad() {
     assetsLoaded++;
+    const progress = (assetsLoaded / totalAssets) * 100;
+    document.getElementById("progressBar").style.width = `${progress}%`;
     if (assetsLoaded === totalAssets) {
         document.getElementById("loadingScreen").style.display = "none";
-        gameLoop();
     }
 }
 
@@ -337,7 +360,7 @@ function drawPowerPulse() {
         
         ctx.arc(ball.x, ball.y, pulseRadius, 0, Math.PI * 2);
         
-        ctx.strokeStyle = '#00ffff'; // Neon cyan color
+        ctx.strokeStyle = '#00ffff';
         ctx.lineWidth = 3;
         ctx.globalAlpha = alpha;
         ctx.shadowBlur = 20;
@@ -369,6 +392,11 @@ function drawObstacle(o) {
         ctx.drawImage(crystalImg, o.x - o.size / 2, o.y - o.size / 2, o.size, o.size);
         ctx.restore();
         ctx.shadowBlur = 0;
+    } else {
+        ctx.beginPath();
+        ctx.arc(o.x, o.y, o.size / 2, 0, Math.PI * 2);
+        ctx.fillStyle = o.color;
+        ctx.fill();
     }
 }
 
@@ -425,6 +453,7 @@ function handleWithdraw() {
 
 function gameLoop() {
     if (gameOver) return;
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawGoal();
@@ -451,8 +480,10 @@ function gameLoop() {
         scoreTiffy += tiffyPerPoint;
         localStorage.setItem('tetrusScore', scoreTiffy.toFixed(2));
         updateScoreDisplay();
-        bubbleSound.currentTime = 0;
-        bubbleSound.play();
+        if (bubbleSound.complete) {
+          bubbleSound.currentTime = 0;
+          bubbleSound.play();
+        }
         goal.x = Math.random() * (canvas.width - 60) + 30;
         goal.y = Math.random() * (canvas.height - 60) + 30;
         currentTiltSpeed = Math.max(2, currentTiltSpeed - speedIncreasePerCoin);
@@ -492,8 +523,10 @@ function gameLoop() {
             const angle = Math.atan2(dy, dx);
             speed.x = -Math.cos(angle) * 5;
             speed.y = -Math.sin(angle) * 5;
-            impactSound.currentTime = 0;
-            impactSound.play();
+            if (impactSound.complete) {
+                impactSound.currentTime = 0;
+                impactSound.play();
+            }
         }
         return true;
     });
@@ -505,14 +538,16 @@ function gameLoop() {
         if (blackHole.x - blackHole.radius < 0 || blackHole.x + blackHole.radius > canvas.width) {
             blackHole.vx *= -1;
         }
-        if (blackHhole.y - blackHole.radius < 0 || blackHole.y + blackHole.radius > canvas.height) {
+        if (blackHole.y - blackHole.radius < 0 || blackHole.y + blackHole.radius > canvas.height) {
             blackHole.vy *= -1;
         }
 
         const distToHole = Math.sqrt((ball.x - blackHole.x)**2 + (ball.y - blackHole.y)**2);
         if (distToHole < blackHole.radius + ball.r) {
             gameOver = true;
-            gameOverSound.play();
+            if (gameOverSound.complete) {
+                gameOverSound.play();
+            }
             document.getElementById("gameOverScreen").style.display = "flex";
         } else {
             ball.x += (blackHole.x - ball.x) * 0.005;
@@ -596,6 +631,7 @@ function drawBlackHole() {
 }
 
 loadAssets();
+gameLoop();
 </script>
 
 </body>
