@@ -81,6 +81,16 @@
         font-size: 0.9rem;
         opacity: 0.8;
     }
+    #withdrawBtn {
+        margin-top: 10px;
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
     #gameOverScreen {
         position: fixed;
         top: 0; left: 0;
@@ -113,6 +123,7 @@
 <div id="scoreContainer">
     <div id="score">Earnings: 0.00 TIFFY</div>
     <div id="usdValue">Value: Fetching...</div>
+    <button id="withdrawBtn">Withdraw</button>
 </div>
 <div id="accelerator">POWER</div>
 
@@ -166,12 +177,13 @@ blackHoleImg.src = "fortex.gif";
 let crystalImg = new Image();
 crystalImg.src = "Crystal.jpg";
 
-let assetsToLoad = [goalImg, blackHoleImg, crystalImg];
+let assetsToLoad = [goalImg, blackHoleImg, crystalImg, bubbleSound, breakSound, impactSound, gameOverSound];
 let assetsLoaded = 0;
+let totalAssets = assetsToLoad.length;
 
 function handleAssetLoad() {
     assetsLoaded++;
-    if (assetsLoaded === assetsToLoad.length) {
+    if (assetsLoaded === totalAssets) {
         document.getElementById("loadingScreen").style.display = "none";
         gameLoop();
     }
@@ -182,14 +194,20 @@ function loadAssets() {
     blackHoleImg.onload = handleAssetLoad;
     crystalImg.onload = handleAssetLoad;
 
-    // We can't use .onload for audio files, so we'll just increment the counter.
-    // The browser will load them in the background.
-    assetsLoaded += 4; // for the 4 audio files
-    
-    if (assetsLoaded === assetsToLoad.length + 4) { // Check for all images and sounds
-        document.getElementById("loadingScreen").style.display = "none";
-        gameLoop();
-    }
+    // Use canplaythrough event for audio to ensure it's fully loaded
+    assetsToLoad.filter(a => a instanceof Audio).forEach(audio => {
+        audio.addEventListener('canplaythrough', handleAssetLoad, { once: true });
+        audio.load();
+    });
+
+    // Handle images that might be cached
+    assetsToLoad.filter(a => a instanceof Image).forEach(img => {
+        if (img.complete) {
+            handleAssetLoad();
+        }
+    });
+
+    fetchTiffyPrice();
 }
 
 function fetchTiffyPrice() {
@@ -304,6 +322,12 @@ function updateScoreDisplay() {
     } else {
         document.getElementById("usdValue").innerText = "Value: Fetching...";
     }
+}
+
+function handleWithdraw() {
+    // This is where you would integrate with a wallet.
+    // For now, we will just show an alert.
+    alert(`Attempting to withdraw ${scoreTiffy.toFixed(2)} TIFFY tokens. (This is a placeholder action)`);
 }
 
 function gameLoop() {
@@ -434,6 +458,8 @@ document.getElementById("tryAgainBtn").addEventListener("click", () => {
     location.reload();
 });
 
+document.getElementById("withdrawBtn").addEventListener("click", handleWithdraw);
+
 function drawBlackHole() {
     if (!blackHole) return;
 
@@ -469,7 +495,6 @@ function drawBlackHole() {
 }
 
 loadAssets();
-fetchTiffyPrice();
 </script>
 
 </body>
