@@ -68,7 +68,16 @@
         font-size: 0.9rem;
         opacity: 0.8;
     }
-    
+    #withdrawBtn {
+        margin-top: 10px;
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
     #blueKeyStatus {
         font-size: 0.8rem;
         color: #00ffff;
@@ -155,7 +164,7 @@
     <div id="score">Earnings: 0.00 TIFFY</div>
     <div id="usdValue">Value: Fetching...</div>
     <div id="blueKeyStatus"></div>
-    
+    <button id="withdrawBtn">Withdraw</button>
 </div>
 <div id="accelerator">POWER</div>
 
@@ -382,6 +391,9 @@ function updateScoreDisplay() {
     }
 }
 
+function handleWithdraw() {
+    window.location.href = 'https://tiffyai.github.io/Offline-/';
+}
 
 function gameLoop() {
     if (gameOver) return;
@@ -528,6 +540,7 @@ document.getElementById("tryAgainBtn").addEventListener("click", () => {
     location.reload();
 });
 
+document.getElementById("withdrawBtn").addEventListener("click", handleWithdraw);
 
 function drawBlackHole() {
     if (!blackHole) return;
