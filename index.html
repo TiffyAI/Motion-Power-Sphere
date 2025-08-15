@@ -107,6 +107,7 @@
         cursor: pointer;
         margin-top: 20px;
         color: #000;
+        box-shadow: 0 0 12px rgba(0,255,255,0.75);
     }
     #keyFoundPopup {
         position: fixed;
@@ -143,9 +144,64 @@
         cursor: pointer;
         color: #000;
     }
+
+    /* ADDED START: Top-left "Portal" button + Game Over portal button styles */
+    #portalBtn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 3;
+        padding: 8px 14px;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        color: #000;
+        text-decoration: none;
+        background: linear-gradient(90deg,#00ffff,#7afcff);
+        border: 1px solid rgba(0,255,255,0.6);
+        border-radius: 10px;
+        box-shadow: 0 0 14px rgba(0,255,255,0.75), inset 0 0 10px rgba(255,255,255,0.35);
+        text-shadow: 0 0 8px rgba(255,255,255,0.65);
+        font-family: Arial, sans-serif;
+    }
+    #portalBtn:hover {
+        filter: brightness(1.08);
+        box-shadow: 0 0 18px rgba(0,255,255,0.95), inset 0 0 12px rgba(255,255,255,0.45);
+    }
+    .glowPortalBtn {
+        padding: 12px 22px;
+        font-size: 1.1rem;
+        margin-top: 16px;
+        color: #000;
+        background: linear-gradient(90deg,#00ffff,#7afcff);
+        border: 1px solid rgba(0,255,255,0.7);
+        border-radius: 10px;
+        text-decoration: none;
+        box-shadow: 0 0 16px rgba(0,255,255,0.8), inset 0 0 12px rgba(255,255,255,0.35);
+    }
+    .glowPortalBtn:hover {
+        filter: brightness(1.1);
+        box-shadow: 0 0 22px rgba(0,255,255,1), inset 0 0 14px rgba(255,255,255,0.45);
+    }
+    /* ADDED END */
 </style>
+<link rel="manifest" href="manifest.json">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').then(registration => {
+        console.log('Service worker registered: ', registration);
+      }).catch(error => {
+        console.log('Service worker registration failed: ', error);
+      });
+    });
+  }
+</script>
 </head>
 <body>
+
+<!-- ADDED START: Small top-left Portal button -->
+<a id="portalBtn" href="https://tiffyai.github.io/Dream-Menu" target="_blank" rel="noopener">Portal</a>
+<!-- ADDED END -->
 
 <canvas id="gameCanvas"></canvas>
 <div id="scoreContainer">
@@ -158,6 +214,9 @@
 
 <div id="gameOverScreen">
     <h1>Game Over!</h1>
+    <!-- ADDED START: Access to Portal glowing button on Game Over -->
+    <a class="glowPortalBtn" href="https://tiffyai.github.io/Dream-Menu" target="_blank" rel="noopener">Access to Portal</a>
+    <!-- ADDED END -->
     <button id="tryAgainBtn">Try Again</button>
 </div>
 
